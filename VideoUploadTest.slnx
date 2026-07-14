@@ -1,0 +1,4 @@
+<Solution>
+  <Project Path="VideoUploadFunctions/VideoUploadFunctions.csproj" />
+  <Project Path="VideoUploadTest/VideoUploadTest.csproj" />
+</Solution>

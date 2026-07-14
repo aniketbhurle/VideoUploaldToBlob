@@ -1,0 +1,15 @@
+{
+  "IsEncrypted": false,
+  "Values": {
+    "FUNCTIONS_WORKER_RUNTIME": "dotnet-isolated",
+    "AzureWebJobsStorage": "UseDevelopmentStorage=true",
+    "StorageConnection": "YOUR_STORAGE_ACCOUNT_CONNECTION_STRING",
+    "ServiceBusConnection": "YOUR_SERVICE_BUS_CONNECTION_STRING",
+    "VideoUploadedQueueName": "video-uploaded",
+    "VideoValidatedQueueName": "video-validated",
+    "VideoProcessedQueueName": "video-processed",
+    "ThumbnailContainerName": "thumbnails",
+    "SendGridApiKey": "YOUR_SENDGRID_API_KEY",
+    "NotificationFromEmail": "noreply@yourdomain.com"
+  }
+}

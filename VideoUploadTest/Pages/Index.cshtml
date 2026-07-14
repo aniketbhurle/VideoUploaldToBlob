@@ -1,0 +1,220 @@
+﻿@page
+@model IndexModel
+@{
+    ViewData["Title"] = "Video Upload";
+}
+
+<div class="container py-5" style="max-width:720px;">
+
+    <div class="text-center mb-4">
+        <h1 class="fw-bold">🎬 Video Upload</h1>
+        <p class="text-muted">Upload your <strong>.mp4</strong> video. We'll validate it, generate a thumbnail, and email you when it's ready.</p>
+    </div>
+
+    @if (!string.IsNullOrEmpty(Model.SuccessMessage))
+    {
+        <div class="alert alert-success alert-dismissible fade show d-flex align-items-start gap-2" role="alert">
+            <span style="font-size:1.3rem;">✅</span>
+            <div>@Model.SuccessMessage</div>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    @if (!string.IsNullOrEmpty(Model.ErrorMessage))
+    {
+        <div class="alert alert-danger alert-dismissible fade show d-flex align-items-start gap-2" role="alert">
+            <span style="font-size:1.3rem;">⚠️</span>
+            <div>@Model.ErrorMessage</div>
+            <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        </div>
+    }
+
+    <div class="card shadow-sm border-0">
+        <div class="card-body p-4">
+            <form method="post" enctype="multipart/form-data" id="uploadForm" asp-antiforgery="true">
+
+                <!-- Drop Zone -->
+                <div id="dropZone"
+                     class="border border-2 border-dashed rounded-3 p-5 text-center mb-4"
+                     style="border-color:#0078d4!important;background:#f0f7ff;cursor:pointer;transition:background .2s;">
+                    <div id="dropZoneContent">
+                        <div style="font-size:3rem;">🎥</div>
+                        <p class="mb-1 fw-semibold text-primary">Drag &amp; drop your .mp4 file here</p>
+                        <p class="text-muted small mb-3">or click to browse</p>
+                        <label class="btn btn-outline-primary btn-sm" for="VideoFile">
+                            Browse File
+                        </label>
+                    </div>
+                    <div id="fileSelected" class="d-none">
+                        <div style="font-size:3rem;">✅</div>
+                        <p class="fw-semibold text-success mb-1" id="selectedFileName"></p>
+                        <p class="text-muted small" id="selectedFileSize"></p>
+                        <button type="button" class="btn btn-outline-secondary btn-sm mt-1" id="clearFile">Remove</button>
+                    </div>
+                </div>
+
+                <input asp-for="VideoFile" type="file" accept="video/mp4,.mp4" class="d-none" id="VideoFile" />
+
+                <!-- User Info -->
+                <div class="mb-3">
+                    <label asp-for="UserName" class="form-label fw-semibold">Your Name <span class="text-muted fw-normal">(optional)</span></label>
+                    <input asp-for="UserName" class="form-control" placeholder="e.g. Jane Smith" autocomplete="name" />
+                </div>
+
+                <div class="mb-4">
+                    <label asp-for="UserEmail" class="form-label fw-semibold">Email Address <span class="text-danger">*</span></label>
+                    <input asp-for="UserEmail" type="email" class="form-control" placeholder="you@example.com" required autocomplete="email" />
+                    <div class="form-text">We'll email you when your video has been processed.</div>
+                </div>
+
+                <!-- Progress Bar (hidden until upload starts) -->
+                <div id="progressWrapper" class="d-none mb-4">
+                    <div class="d-flex justify-content-between mb-1">
+                        <small class="text-muted">Uploading…</small>
+                        <small class="text-muted" id="progressPercent">0%</small>
+                    </div>
+                    <div class="progress" style="height:10px;">
+                        <div id="progressBar" class="progress-bar progress-bar-striped progress-bar-animated bg-primary"
+                             role="progressbar" style="width:0%"></div>
+                    </div>
+                </div>
+
+                <div class="d-grid">
+                    <button type="submit" class="btn btn-primary btn-lg" id="submitBtn">
+                        <span id="submitText">⬆ Upload Video</span>
+                        <span id="submitSpinner" class="spinner-border spinner-border-sm ms-2 d-none" role="status"></span>
+                    </button>
+                </div>
+
+            </form>
+        </div>
+    </div>
+
+    <!-- Pipeline Info Cards -->
+    <div class="row g-3 mt-4 text-center">
+        <div class="col-md-4">
+            <div class="card border-0 bg-light h-100">
+                <div class="card-body py-3">
+                    <div style="font-size:2rem;">☁️</div>
+                    <p class="fw-semibold mb-1 small">1. Upload</p>
+                    <p class="text-muted" style="font-size:.8rem;">Your video is securely stored in Azure Blob Storage.</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 bg-light h-100">
+                <div class="card-body py-3">
+                    <div style="font-size:2rem;">⚡</div>
+                    <p class="fw-semibold mb-1 small">2. Validate &amp; Thumbnail</p>
+                    <p class="text-muted" style="font-size:.8rem;">Azure Functions validate the file and generate a thumbnail automatically.</p>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-4">
+            <div class="card border-0 bg-light h-100">
+                <div class="card-body py-3">
+                    <div style="font-size:2rem;">📧</div>
+                    <p class="fw-semibold mb-1 small">3. Notification</p>
+                    <p class="text-muted" style="font-size:.8rem;">You'll receive an email confirmation once everything is ready.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+</div>
+
+@section Scripts {
+<script>
+    const dropZone = document.getElementById('dropZone');
+    const fileInput = document.getElementById('VideoFile');
+    const dropContent = document.getElementById('dropZoneContent');
+    const fileSelected = document.getElementById('fileSelected');
+    const selectedFileName = document.getElementById('selectedFileName');
+    const selectedFileSize = document.getElementById('selectedFileSize');
+    const clearBtn = document.getElementById('clearFile');
+    const form = document.getElementById('uploadForm');
+    const submitBtn = document.getElementById('submitBtn');
+    const submitText = document.getElementById('submitText');
+    const submitSpinner = document.getElementById('submitSpinner');
+    const progressWrapper = document.getElementById('progressWrapper');
+    const progressBar = document.getElementById('progressBar');
+    const progressPercent = document.getElementById('progressPercent');
+
+    function formatBytes(bytes) {
+        if (bytes >= 1073741824) return (bytes / 1073741824).toFixed(1) + ' GB';
+        if (bytes >= 1048576) return (bytes / 1048576).toFixed(1) + ' MB';
+        if (bytes >= 1024) return (bytes / 1024).toFixed(1) + ' KB';
+        return bytes + ' B';
+    }
+
+    function showFile(file) {
+        selectedFileName.textContent = file.name;
+        selectedFileSize.textContent = formatBytes(file.size);
+        dropContent.classList.add('d-none');
+        fileSelected.classList.remove('d-none');
+    }
+
+    function clearFile() {
+        fileInput.value = '';
+        dropContent.classList.remove('d-none');
+        fileSelected.classList.add('d-none');
+    }
+
+    dropZone.addEventListener('click', (e) => {
+        if (!e.target.closest('#clearFile')) fileInput.click();
+    });
+
+    fileInput.addEventListener('change', () => {
+        if (fileInput.files.length > 0) showFile(fileInput.files[0]);
+    });
+
+    clearBtn.addEventListener('click', (e) => { e.stopPropagation(); clearFile(); });
+
+    dropZone.addEventListener('dragover', (e) => {
+        e.preventDefault();
+        dropZone.style.background = '#ddeeff';
+    });
+
+    dropZone.addEventListener('dragleave', () => {
+        dropZone.style.background = '#f0f7ff';
+    });
+
+    dropZone.addEventListener('drop', (e) => {
+        e.preventDefault();
+        dropZone.style.background = '#f0f7ff';
+        const files = e.dataTransfer.files;
+        if (files.length > 0) {
+            const file = files[0];
+            if (!file.name.toLowerCase().endsWith('.mp4')) {
+                alert('Only .mp4 files are supported.');
+                return;
+            }
+            const dt = new DataTransfer();
+            dt.items.add(file);
+            fileInput.files = dt.files;
+            showFile(file);
+        }
+    });
+
+    form.addEventListener('submit', (e) => {
+        if (!fileInput.files || fileInput.files.length === 0) return;
+
+        submitBtn.disabled = true;
+        submitText.textContent = 'Uploading…';
+        submitSpinner.classList.remove('d-none');
+        progressWrapper.classList.remove('d-none');
+
+        // Simulate progress since fetch upload with FormData doesn't expose XHR progress here
+        let pct = 0;
+        const interval = setInterval(() => {
+            pct = Math.min(pct + Math.random() * 8, 92);
+            progressBar.style.width = pct + '%';
+            progressPercent.textContent = Math.round(pct) + '%';
+        }, 300);
+
+        // Allow form to submit naturally; clear interval when page reloads
+        window.addEventListener('beforeunload', () => clearInterval(interval));
+    });
+</script>
+}
+
